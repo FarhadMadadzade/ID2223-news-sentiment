@@ -2,8 +2,13 @@
 Project for ID2223
 
 
-Model description
+# Model description:
 
-Files and pipelines
+# Files and pipelines:
 
-User Interface
+## feature-pipeline.py
+## feature-pipeline.ipynb
+## preprocessing-pipeline.ipynb
+## training-pipeline.py
+
+# User Interface:
