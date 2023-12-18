@@ -1,5 +1,3 @@
-import os
-import pandas as pd
 from datasets import Dataset, DatasetDict
 from transformers import (
     GPT2TokenizerFast,
