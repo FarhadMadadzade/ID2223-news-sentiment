@@ -1,9 +1,4 @@
-import pandas as pd
-from datasets import load_dataset
-from transformers import GPT2TokenizerFast
-import torch
-import hopsworks
-from transformers import pipeline
+from transformers import GPT2TokenizerFast, pipeline
 from sklearn.model_selection import train_test_split
 from time import sleep
 from bs4 import BeautifulSoup
