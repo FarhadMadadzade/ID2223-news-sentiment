@@ -1,5 +1,10 @@
-import re
-import csv
+import pandas as pd
+from datasets import load_dataset
+from transformers import GPT2TokenizerFast
+import torch
+import hopsworks
+from transformers import pipeline
+from sklearn.model_selection import train_test_split
 from time import sleep
 from bs4 import BeautifulSoup
 import requests
@@ -34,57 +39,101 @@ def parse_time(posted):
     return time
 
 
-def get_article(card):
+def get_article(card, from_date):
     """Extract article information from the raw html"""
     headline = card.find("h4", "s-title").text
-    source = card.find("span", "s-source").text
     posted = card.find("span", "s-time").text.replace("·", "").strip()
-    description = card.find("p", "s-desc").text.strip()
+    text = card.find("p", "s-desc").text.strip()
+    a_element = card.find("a", "thmb")
+    if a_element:
+        headline = a_element.get("title")
+        href = a_element.get("href")
+    else:
+        return None
+
+    posted = parse_time(posted)
+    if posted < from_date:
+        return None
 
     article = {
         "headline": headline,
-        "source": source,
-        "posted": parse_time(posted),
-        "description": description,
+        "posted": posted,
+        "text": text.replace("...", ""),
+        "href": href,
     }
     return article
 
 
-def get_the_news(search):
+def get_news_headlines(search_companies, from_date=None):
     """Run the main program"""
-    template = "https://news.search.yahoo.com/search?p={}"
-    url = template.format(search)
-    articles = []
-    links = set()
+    if not isinstance(search_companies, list):
+        search_companies = [search_companies]
 
-    while True:
-        response = requests.get(url, headers=headers)
-        soup = BeautifulSoup(response.text, "html.parser")
-        cards = soup.find_all("div", "NewsArticle")
+    company_articles = {}
+    for search in search_companies:
+        template = "https://news.search.yahoo.com/search?p={}"
+        url = template.format(search)
+        articles = []
+        links = set()
 
-        # extract articles from page
-        for card in cards:
-            article = get_article(card)
-            link = article[-1]
-            if not link in links:
-                links.add(link)
-                articles.append(article)
+        while True:
+            response = requests.get(url, headers=headers)
+            soup = BeautifulSoup(response.text, "html.parser")
+            cards = soup.find_all("div", "NewsArticle")
 
-        # find the next page
-        try:
-            url = soup.find("a", "next").get("href")
-            sleep(1)
-        except AttributeError:
-            break
+            # extract articles from page
+            for card in cards:
+                article = get_article(card, from_date)
+                if article:
+                    link = article["href"]
+                    if not link in links:
+                        links.add(link)
+                        del article["href"]
+                        articles.append(article)
 
-    # save article data
-    with open("results.csv", "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["Headline", "Source", "Posted", "Description", "Link"])
-        writer.writerows(articles)
+            # find the next page
+            try:
+                url = soup.find("a", "next").get("href")
+                sleep(1)
+            except AttributeError:
+                break
 
-    return articles
+        print("Total articles:", len(articles))
+        company_articles[search] = articles
+    return company_articles
 
 
-news = get_the_news("Tesla")
-print(news)
+def get_int_label(label: str):
+    if label == "negative":
+        return 0
+    if label == "positive":
+        return 1
+    if label == "neutral":
+        return 2
+
+
+def get_labels(companies: list = ["tesla"], num_days_back: int = 1):
+    """Get the labels for the headlines"""
+
+    pipe = pipeline(
+        "text-classification",
+        model="mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis",
+    )
+
+    from_date = datetime.now() - timedelta(days=num_days_back)
+
+    companies = get_news_headlines(search_companies=companies, from_date=from_date)
+
+    for _, articles in companies.items():
+        for article in articles:
+            if article["text"][-1] != "?":
+                space = ". "
+            else:
+                space = " "
+            article["text"] = article["headline"] + space + article["text"]
+            article["label"] = get_int_label(pipe(article["text"])[0]["label"])
+            del article["headline"]
+            del article["posted"]
+
+
+get_labels()
