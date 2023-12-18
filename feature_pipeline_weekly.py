@@ -29,7 +29,7 @@ def update_feature_store():
     )
 
     X_train, X_test, y_train, y_test = train_test_split(
-        df["text"], df["label"], test_size=0.2, stratify=df["label"]
+        df["embeddings"], df["label"], test_size=0.2, stratify=df["label"]
     )
 
     train_dataset_df = pd.concat([X_train, y_train], axis=1)
