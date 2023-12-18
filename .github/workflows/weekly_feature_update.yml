@@ -3,7 +3,7 @@ name: news-sentiment-feature-weekly-pipeline
 on:
   workflow_dispatch:
   schedule:
-    - cron: '11 11 * * *'
+    - cron: '0 18 * * 6'
 
 jobs:
   test_schedule:
@@ -15,7 +15,7 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: '3.8.18'
           
       - name: install python packages
         run: |
