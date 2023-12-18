@@ -71,7 +71,7 @@ def train():
     metric = evaluate.load("accuracy")
     training_args = TrainingArguments(
         output_dir="test_trainer", evaluation_strategy="epoch"
-    )  # TODO add more args based on best hyperparameters
+    )  # TODO add more args based on best hyperparameters, also upload to huggingface
 
     tokenized_train_dataset = tokenized_datasets["train"].shuffle(seed=55)
     tokenized_test_dataset = tokenized_datasets["test"].shuffle(seed=55)

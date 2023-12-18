@@ -9,14 +9,7 @@ from time import sleep
 from bs4 import BeautifulSoup
 import requests
 from datetime import datetime, timedelta
-
-headers = {
-    "accept": "*/*",
-    "accept-encoding": "gzip, deflate, br",
-    "accept-language": "en-US,en;q=0.9",
-    "referer": "https://www.google.com",
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36 Edg/85.0.564.44",
-}
+from tqdm import tqdm
 
 
 def parse_time(posted):
@@ -64,17 +57,27 @@ def get_article(card, from_date):
     return article
 
 
-def get_news_headlines(search_companies, from_date=None):
+def get_news_headlines(search_companies, from_date, max_articles_per_search):
     """Run the main program"""
+    headers = {
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br",
+        "accept-language": "en-US,en;q=0.9",
+        "referer": "https://www.google.com",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36 Edg/85.0.564.44",
+    }
+
     if not isinstance(search_companies, list):
         search_companies = [search_companies]
 
     company_articles = {}
-    for search in search_companies:
+    for search in tqdm(search_companies):
+        print(f"Collecting articles for {search}")
         template = "https://news.search.yahoo.com/search?p={}"
         url = template.format(search)
         articles = []
         links = set()
+        counter = 0
 
         while True:
             response = requests.get(url, headers=headers)
@@ -86,10 +89,11 @@ def get_news_headlines(search_companies, from_date=None):
                 article = get_article(card, from_date)
                 if article:
                     link = article["href"]
-                    if not link in links:
+                    if not link in links and counter < max_articles_per_search:
                         links.add(link)
                         del article["href"]
                         articles.append(article)
+                        counter += 1
 
             # find the next page
             try:
@@ -98,7 +102,7 @@ def get_news_headlines(search_companies, from_date=None):
             except AttributeError:
                 break
 
-        print("Total articles:", len(articles))
+        print(f"Total articles for {search}: {len(articles)}")
         company_articles[search] = articles
     return company_articles
 
@@ -112,7 +116,7 @@ def get_int_label(label: str):
         return 2
 
 
-def get_labels(companies: list = ["tesla"], num_days_back: int = 1):
+def get_labels(companies, num_days_back, max_articles_per_search):
     """Get the labels for the headlines"""
 
     pipe = pipeline(
@@ -122,7 +126,11 @@ def get_labels(companies: list = ["tesla"], num_days_back: int = 1):
 
     from_date = datetime.now() - timedelta(days=num_days_back)
 
-    companies = get_news_headlines(search_companies=companies, from_date=from_date)
+    companies = get_news_headlines(
+        search_companies=companies,
+        from_date=from_date,
+        max_articles_per_search=max_articles_per_search,
+    )
 
     for _, articles in companies.items():
         for article in articles:
@@ -135,5 +143,25 @@ def get_labels(companies: list = ["tesla"], num_days_back: int = 1):
             del article["headline"]
             del article["posted"]
 
+    return companies
 
-get_labels()
+
+def get_embedded_features(
+    companies: list = ["tesla"],
+    num_days_back: int = 1,
+    max_articles_per_search: int = 50,
+):
+    tokenizer = GPT2TokenizerFast.from_pretrained("Xenova/text-embedding-ada-002")
+
+    scraped_data = get_labels(
+        companies=companies,
+        num_days_back=num_days_back,
+        max_articles_per_search=max_articles_per_search,
+    )
+    get_embedded_features = []
+    for _, articles in scraped_data.items():
+        for article in articles:
+            article["text"] = tokenizer.encode(article["text"])
+            get_embedded_features.append(article)
+
+    return get_embedded_features
