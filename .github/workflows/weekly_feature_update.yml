@@ -3,7 +3,7 @@ name: news-sentiment-feature-weekly-pipeline
 on:
   workflow_dispatch:
   schedule:
-    - cron: '15 23 * * 7'
+    - cron: '0 18 * * 0'
 
 jobs:
   test_schedule:
