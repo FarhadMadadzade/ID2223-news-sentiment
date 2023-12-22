@@ -33,10 +33,11 @@ def tokenize_function(examples, bert_tokenizer):
     return bert_tokenizer(examples["text"], padding="max_length", truncation=True)
 
 
-def compute_metrics(eval_pred, metric):
-    logits, labels = eval_pred
-    predictions = np.argmax(logits, axis=-1)
-    return metric.compute(predictions=predictions, references=labels)
+def get_compute_metrics(metric):
+    return def compute_metrics(eval_pred): 
+        logits, labels = eval_pred
+        predictions = np.argmax(logits, axis=-1)
+        return metric.compute(predictions=predictions, references=labels)
 
 
 def train():
@@ -67,13 +68,15 @@ def train():
     )
 
     metric = evaluate.load("accuracy")
+    compute_metrics = get_compute_metrics(metric)
+    
     training_args = TrainingArguments(
         output_dir="test_trainer", evaluation_strategy="epoch"
     )  # TODO add more args based on best hyperparameters, also upload to huggingface
 
     tokenized_train_dataset = tokenized_datasets["train"].shuffle(seed=55)
     tokenized_test_dataset = tokenized_datasets["test"].shuffle(seed=55)
-
+    
     trainer = Trainer(
         model=model,
         args=training_args,
