@@ -1,0 +1,38 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>sentiment-analysis-api</title>
+    <style>
+      #footer {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        padding: 5px 10px 5px 10px;
+        background-color: rgba(0, 0, 0, 0.5); /* Black background with 0.5 opacity */
+        color: #fff;
+        font-size: 12px;
+        border-radius: 5px 0 0 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="footer">
+      <a href="https://gptengineer.app/" target="_blank" style="color: #fff; text-decoration: none;">
+        Built with <b>GPT Engineer</b>
+      </a>
+    </div>
+    <script src="/src/main.jsx" type="module"></script>
+    <script>
+      // Don't show the footer if the page is in an iframe or if it's being rendered by puppeteer (screenshot service)
+      if (window.self !== window.top || navigator.userAgent.includes('puppeteer')) {
+        // the page is in an iframe
+        var footer = document.getElementById('footer');
+        if (footer) {
+          footer.style.display = 'none';
+        }
+      }
+    </script>
+  </body>
+</html>
