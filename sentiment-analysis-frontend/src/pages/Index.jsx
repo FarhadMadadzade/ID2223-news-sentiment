@@ -14,92 +14,51 @@ import {
   StatHelpText,
   StatArrow,
   useToast,
-  Spinner
+  Spinner,
+  Icon,
+  Grid
 } from "@chakra-ui/react";
-import { FaSearch } from "react-icons/fa";
-
-const sentimentSumByDate = (results) => {
-  const sentimentMap = {
-    'Positive': 1,
-    'Negative': -1,
-    'Neutral': 0,
-  };
-  const groupedByDate = {};
-
-  results.forEach(result => {
-    const dateString = result.posted.toISOString().split('T')[0];
-    if (!groupedByDate[dateString]) {
-      groupedByDate[dateString] = 0;
-    }
-    groupedByDate[dateString] += sentimentMap[result.sentiment];
-  });
-
-  return Object.entries(groupedByDate).map(([date, sentimentSum]) => ({
-    date: new Date(date),
-    sentimentSum: Math.floor(Math.random() * 10) - Math.floor(Math.random() * 12),
-  }));
-};
-
+import { FaSearch, FaCircle } from "react-icons/fa";
+import SentimentPieChart from "../components/PieChartSentiments";
 
 const Index = () => {
   const [searchKey, setSearchKey] = useState("");
-  const [articleResults, setArticleResults] = useState([
-    {
-      headline: 'Tesla stock price soars',
-      sentiment: 'Positive',
-      posted: new Date('2023-12-20T10:00:00Z')
-    },
-    {
-      headline: 'Tesla stock price plummets',
-      sentiment: 'Negative',
-      posted: new Date('2023-12-21T10:00:00Z')
-    },
-    {
-      headline: 'Tesla stock price remains unchanged',
-      sentiment: 'Neutral',
-      posted: new Date('2023-12-22T10:00:00Z')
-    },
-    {
-      headline: 'New Tesla model receives high safety ratings',
-      sentiment: 'Positive',
-      posted: new Date('2023-12-23T09:00:00Z')
-    },
-    {
-      headline: 'Tesla faces recall over software glitch',
-      sentiment: 'Negative',
-      posted: new Date('2023-12-24T08:00:00Z')
-    },
-    {
-      headline: 'Tesla announces expansion into Asian markets',
-      sentiment: 'Positive',
-      posted: new Date('2023-12-25T11:00:00Z')
-    },
-    {
-      headline: 'Tesla receives environmental award',
-      sentiment: 'Positive',
-      posted: new Date('2023-12-20T12:00:00Z')
-    },
-    {
-      headline: 'Tesla battery life under scrutiny',
-      sentiment: 'Negative',
-      posted: new Date('2023-12-21T13:00:00Z')
-    },
-    {
-      headline: 'Tesla autopilot feature gains popularity',
-      sentiment: 'Positive',
-      posted: new Date('2023-12-23T15:00:00Z')
-    },
-    {
-      headline: 'Tesla faces challenges in new market',
-      sentiment: 'Negative',
-      posted: new Date('2023-12-24T16:00:00Z')
-    },
-  ]);
-
+  const [articleResults, setArticleResults] = useState([]);
   const [sentimentSumResults, setSentimentSumResults] = useState([]);
+  const [todaysArticles, setTodaysArticles] = useState([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
+
+  const sentimentSumByDate = () => {
+    const sentimentMap = {
+      'positive': 1,
+      'negative': -1,
+      'neutral': 0,
+    };
+    const groupedByDate = {};
+
+    const today = new Date();
+
+    articleResults.forEach((article) => {
+      const dateString = article.posted.toISOString().split('T')[0];
+      if (!groupedByDate[dateString]) {
+        groupedByDate[dateString] = 0;
+      }
+      groupedByDate[dateString] += sentimentMap[article.sentiment];
+
+      if (article.posted.toISOString().split('T')[0] === today.toISOString().split('T')[0]) {
+        setTodaysArticles((prev) => [...prev, article]);
+      }
+    });
+
+
+    const sentimentSumResult = Object.entries(groupedByDate).map(([date, sentimentSum]) => ({
+      date: new Date(date),
+      sentimentSum: sentimentSum,
+    }));
+    setSentimentSumResults(sentimentSumResult);
+  };
 
   const handleSearchKeyChange = (event) => {
     setSearchKey(event.target.value);
@@ -120,8 +79,16 @@ const Index = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const results = await response.json();
-      setArticleResults(results);
+      let responseJson = await response.json();
+
+      responseJson.result.forEach((result) => {
+        result.posted = new Date(result.posted);
+      })
+
+      setArticleResults(responseJson.result);
+      setSentimentSumResults([])
+      setTodaysArticles([])
+
       toast({
         title: "Analysis complete.",
         description: "Sentiment analysis has been successfully completed.",
@@ -142,7 +109,9 @@ const Index = () => {
   };
 
   useEffect(() => {
-    articleResults.length > 0 && setSentimentSumResults(sentimentSumByDate(articleResults));
+    if (articleResults.length > 0) {
+      sentimentSumByDate();
+    }
   }, [articleResults])
 
   return (
@@ -159,6 +128,23 @@ const Index = () => {
             </Button>
           </HStack>
         </FormControl>
+
+        {/* Add a pie chart representation */}
+        {todaysArticles && (
+          <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={4}>
+            <Heading as="h3" size="md" mb={4} textAlign="center">
+              Today's Sentiment Breakdown (%)
+            </Heading>
+            {
+              todaysArticles.length > 0 ? (
+                <SentimentPieChart data={todaysArticles} />
+              ) :
+                <Box textAlign="center">
+                  No articles found for today
+                </Box>
+            }
+          </Box>
+        )}
 
         {/* Add a summarized bar chart representation */}
         {sentimentSumResults && sentimentSumResults.length > 0 && (
@@ -192,23 +178,34 @@ const Index = () => {
           </Box>
         )}
 
-        {articleResults && articleResults
-          .sort((a, b) => a.posted - b.posted)
-          .map((result, index) => (
-            <Box key={index}>
-              <Stat>
-                <StatLabel>{result.headline}</StatLabel>
-                <StatNumber>{result.sentiment}</StatNumber>
-                <StatHelpText>
-                  <StatArrow type={result.sentiment === 'Positive' ? 'increase' : result.sentiment === 'Negative' ? 'decrease' : null} />
-                  {result.sentiment === 'Positive' ? 'Increase' : result.sentiment === 'Negative' ? 'Decrease' : 'Neutral'} in sentiment
-                  <Box as="span" ml="4">
-                    {result.posted.toLocaleDateString()}
-                  </Box>
-                </StatHelpText>
-              </Stat>
-            </Box>
-          ))}
+        <Grid templateColumns={{ base: "repeat(1, 1fr)", md: "repeat(2, 1fr)" }} gap={6}>
+          {articleResults && articleResults
+            .sort((a, b) => b.posted - a.posted)
+            .map((result, index) => (
+              <Box key={index} borderWidth="0.5px" borderRadius="lg" p={4}>
+                <Stat>
+                  <StatLabel>{result.headline}</StatLabel>
+                  <StatNumber>{result.sentiment}</StatNumber>
+                  <StatHelpText>
+                    <HStack>
+                      {
+                        result.sentiment !== "neutral" ? (
+                          <StatArrow type={result.sentiment === 'positive' ? 'increase' : 'decrease'} />
+                        ) :
+                          <Icon as={FaCircle} color="#BFB5B5" marginRight="0.4em" />
+                      }
+                      <Box>
+                        {result.sentiment === 'positive' ? 'Increase' : result.sentiment === 'negative' ? 'Decrease' : 'Neutral'} in sentiment
+                      </Box>
+                      <Box ml="4">
+                        {result.posted.toLocaleDateString()}
+                      </Box>
+                    </HStack>
+                  </StatHelpText>
+                </Stat>
+              </Box>
+            ))}
+        </Grid>
       </VStack>
     </Box>
   );
