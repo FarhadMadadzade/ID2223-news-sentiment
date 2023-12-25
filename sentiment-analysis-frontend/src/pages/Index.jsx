@@ -163,7 +163,7 @@ const Index = () => {
               <VStack width="100%" alignItems="flex-start">
                 {sentimentSumResults.map(({ date, sentimentSum }, index) => (
                   <HStack key={index} direction="row" width="100%">
-                    <Box height="1.5em" width={`${Math.abs(sentimentSum) * 3}%`} bg={
+                    <Box height="1.5em" width={`${Math.abs(sentimentSum) * 5}%`} bg={
                       sentimentSum > 0 ? 'green.300'
                         : sentimentSum < 0 ? 'red.300'
                           : 'gray.300'
