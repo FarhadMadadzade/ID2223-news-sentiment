@@ -66,10 +66,12 @@ const Index = () => {
     setSearchKey(event.target.value);
   };
 
+  const baseUrl = "http://news-sentiment-api-apim.azure-api.net"
+
   const analyzeSentiment = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("https://news-sentiment-api.azurewebsites.net/analyze-sentiment", {
+      const response = await fetch(`${baseUrl}/analyze-sentiment`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
