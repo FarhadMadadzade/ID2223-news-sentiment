@@ -160,10 +160,10 @@ const Index = () => {
                   </Box>
                 ))}
               </VStack>
-              <VStack width="80%" alignItems="flex-start">
+              <VStack width="100%" alignItems="flex-start">
                 {sentimentSumResults.map(({ date, sentimentSum }, index) => (
                   <HStack key={index} direction="row" width="100%">
-                    <Box height="1.5em" width={`${Math.abs(sentimentSum) * 6}%`} bg={
+                    <Box height="1.5em" width={`${Math.abs(sentimentSum) * 3}%`} bg={
                       sentimentSum > 0 ? 'green.300'
                         : sentimentSum < 0 ? 'red.300'
                           : 'gray.300'
@@ -184,8 +184,7 @@ const Index = () => {
             .map((result, index) => (
               <Box key={index} borderWidth="0.5px" borderRadius="lg" p={4}>
                 <Stat>
-                  <StatLabel>{result.headline}</StatLabel>
-                  <StatNumber>{result.sentiment}</StatNumber>
+                  <StatLabel fontSize="1em" marginBottom="0.2em">{result.headline}</StatLabel >
                   <StatHelpText>
                     <HStack>
                       {
@@ -195,7 +194,7 @@ const Index = () => {
                           <Icon as={FaCircle} color="#BFB5B5" marginRight="0.4em" />
                       }
                       <Box>
-                        {result.sentiment === 'positive' ? 'Increase' : result.sentiment === 'negative' ? 'Decrease' : 'Neutral'} in sentiment
+                        {result.sentiment === 'positive' ? 'Positive' : result.sentiment === 'negative' ? 'Negative' : 'Neutral'} in sentiment
                       </Box>
                       <Box ml="4">
                         {result.posted.toLocaleDateString()}
