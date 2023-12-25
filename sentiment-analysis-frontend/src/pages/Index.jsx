@@ -20,6 +20,8 @@ import {
 } from "@chakra-ui/react";
 import { FaSearch, FaCircle } from "react-icons/fa";
 import SentimentPieChart from "../components/PieChartSentiments";
+import credentials from "../../credentials.json";
+
 
 const Index = () => {
   const [searchKey, setSearchKey] = useState("");
@@ -67,10 +69,11 @@ const Index = () => {
   const analyzeSentiment = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:3001/analyze-sentiment", {
+      const response = await fetch("https://news-sentiment-api.azurewebsites.net/analyze-sentiment", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Ocp-Apim-Subscription-Key": credentials["api-key"]
         },
         body: JSON.stringify({ searchKey }),
       });
@@ -130,7 +133,7 @@ const Index = () => {
         </FormControl>
 
         {/* Add a pie chart representation */}
-        {todaysArticles && (
+        {todaysArticles && articleResults.length > 0 && (
           <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={4}>
             <Heading as="h3" size="md" mb={4} textAlign="center">
               Today's Sentiment Breakdown (%)
