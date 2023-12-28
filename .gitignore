@@ -1,0 +1,2 @@
+# Ignore any folder and subfolder called node_modules
+node_modules

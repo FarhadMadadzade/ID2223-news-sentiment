@@ -1,10 +1,9 @@
 from transformers import GPT2TokenizerFast, pipeline
-from sklearn.model_selection import train_test_split
 from time import sleep
 from bs4 import BeautifulSoup
 import requests
 from datetime import datetime, timedelta
-from tqdm import tqdm
+import sys
 
 
 def parse_time(posted):
@@ -71,7 +70,7 @@ def get_news_headlines(search_companies, from_date, max_articles_per_search):
         search_companies = [search_companies]
 
     company_articles = {}
-    for search in tqdm(search_companies):
+    for search in search_companies:
         print(f"Collecting articles for {search}")
         template = "https://news.search.yahoo.com/search?p={}"
         url = template.format(search)
@@ -107,61 +106,15 @@ def get_news_headlines(search_companies, from_date, max_articles_per_search):
     return company_articles
 
 
-def get_int_label(label: str):
-    if label == "negative":
-        return 0
-    if label == "positive":
-        return 1
-    if label == "neutral":
-        return 2
 
 
-def get_labels(companies, num_days_back, max_articles_per_search):
-    """Get the labels for the headlines"""
+if __name__ == "__main__":
+    search_key = sys.argv[1]
+    from_date = datetime.now() - timedelta(
+        days=7
+    )  # Assuming we want articles from the past week
+    max_articles_per_search = 10  # Maximum number of articles to analyze per search
 
-    pipe = pipeline(
-        "text-classification",
-        model="mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis",
-    )
+    # Get the news headlines
+    headlines = get_news_headlines([search_key], from_date, max_articles_per_search)
 
-    from_date = datetime.now() - timedelta(days=num_days_back)
-
-    companies = get_news_headlines(
-        search_companies=companies,
-        from_date=from_date,
-        max_articles_per_search=max_articles_per_search,
-    )
-
-    for _, articles in companies.items():
-        for article in articles:
-            if article["text"][-1] != "?":
-                space = ". "
-            else:
-                space = " "
-            article["text"] = article["headline"] + space + article["text"]
-            article["label"] = get_int_label(pipe(article["text"])[0]["label"])
-            del article["headline"]
-            del article["posted"]
-
-    return companies
-
-
-def get_embedded_features(
-    companies: list = ["tesla"],
-    num_days_back: int = 1,
-    max_articles_per_search: int = 50,
-):
-    tokenizer = GPT2TokenizerFast.from_pretrained("Xenova/text-embedding-ada-002")
-
-    scraped_data = get_labels(
-        companies=companies,
-        num_days_back=num_days_back,
-        max_articles_per_search=max_articles_per_search,
-    )
-    get_embedded_features = []
-    for _, articles in scraped_data.items():
-        for article in articles:
-            article["text"] = tokenizer.encode(article["text"])
-            get_embedded_features.append(article)
-
-    return get_embedded_features
