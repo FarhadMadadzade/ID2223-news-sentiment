@@ -93,7 +93,6 @@ const Index = () => {
       else {
         throw new Error(`The model is currently loading. Please try again in ${response.estimated_time} seconds.`)
       }
-
     }
     catch (error) {
       toast({
@@ -169,8 +168,6 @@ const Index = () => {
     }
   }, [articleResults])
 
-
-
   return (
     <Box p={5}>
       <VStack spacing={4} align="stretch">
@@ -208,9 +205,9 @@ const Index = () => {
             <Heading as="h3" size="md" mb={4}>
               Sentiment Score Summary of Found Articles
             </Heading>
-            <Tooltip label='Info'>
+            <Tooltip label='Here we sum the sentiment scores. A positive score is counted as +1, a negative as -1, and a neutral as 0'>
               <Box p={2}>
-                <CustomCard>Here we sum the sentiment scores. A positive score is counted as +1, a negative as -1, and a neutral as 0</CustomCard>
+                <CustomCard>Info</CustomCard>
               </Box>
             </Tooltip>
 
