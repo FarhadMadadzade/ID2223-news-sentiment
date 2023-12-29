@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Box,
+  Flex,
   Button,
   FormControl,
   FormLabel,
@@ -13,11 +14,10 @@ import {
   StatHelpText,
   StatArrow,
   useToast,
-  Spinner,
   Icon,
   Grid
 } from "@chakra-ui/react";
-import { FaSearch, FaCircle } from "react-icons/fa";
+import { FaSearch, FaCircle, FaArrowRight } from "react-icons/fa";
 import SentimentPieChart from "../components/PieChartSentiments";
 
 const Index = () => {
@@ -31,9 +31,9 @@ const Index = () => {
 
   const sentimentSumByDate = () => {
     const sentimentMap = {
-      'positive': 1,
-      'negative': -1,
-      'neutral': 0,
+      'Positive': 1,
+      'Negative': -1,
+      'Neutral': 0,
     };
     const groupedByDate = {};
 
@@ -63,10 +63,31 @@ const Index = () => {
     setSearchKey(event.target.value);
   };
 
-  const baseUrl = "https://speech-recognition-386209.ew.r.appspot.com"
+  const fetchSentiments = async (data) => {
+
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/Artanis1551/bert_sentiment_trainer",
+      {
+        headers: { Authorization: "Bearer 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" },
+        method: "POST",
+        body: JSON.stringify(data),
+      }
+    );
+
+    const result = await response.json();
+    return result
+  }
+
+  function getLabelOfMaxScore(jsonList) {
+    let maxScoreJson = jsonList.reduce((max, obj) => (max.score > obj.score ? max : obj), jsonList[0]);
+    return maxScoreJson.label;
+  }
+
   const analyzeSentiment = async () => {
     setIsLoading(true);
     try {
+      const baseUrl = "https://speech-recognition-386209.ew.r.appspot.com"
+
       const response = await fetch(`${baseUrl}/analyze-sentiment?${new URLSearchParams({
         searchKey: searchKey
       })}`, {
@@ -78,27 +99,43 @@ const Index = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.estimated_time) {
+          toast({
+            title: "Model is loading.",
+            description: `The model is currently loading. Please try again in ${response.estimated_time} seconds.`,
+            status: "info",
+            duration: 5000,
+            isClosable: true,
+          });
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
       }
 
       let responseJson = await response.json();
-      responseJson.result.forEach(async (headline) => {
-        headline.posted = new Date(headline.posted);
+
+      let results = responseJson.result
+      let sentiments = await fetchSentiments(results.map((result) => result.headline))
+
+      results.forEach((result, index) => {
+        result.sentiment = getLabelOfMaxScore(sentiments[index])
+        result.posted = new Date(result.posted)
       })
 
-      setArticleResults(responseJson.result);
       setSentimentSumResults([])
       setTodaysArticles([])
+      setArticleResults(results);
 
       toast({
         title: "Analysis complete.",
         description: "Sentiment analysis has been successfully completed.",
         status: "success",
         duration: 5000,
-        isClosable: true, q
+        isClosable: true,
       });
     } catch (error) {
-      console.log(error)
+
+
       toast({
         title: "Analysis failed.",
         description: `There was a problem with sentiment analysis: ${error.message}`,
@@ -126,8 +163,7 @@ const Index = () => {
           <FormLabel>Search Key</FormLabel>
           <HStack>
             <Input type="text" placeholder="Enter a search key e.g. TSLA" value={searchKey} onChange={handleSearchKeyChange} />
-            {isLoading ? <Spinner /> : null}
-            <Button leftIcon={<FaSearch />} colorScheme="teal" onClick={analyzeSentiment} isDisabled={!searchKey || isLoading}>
+            <Button isLoading={isLoading} leftIcon={<FaSearch />} colorScheme="teal" onClick={analyzeSentiment} isDisabled={!searchKey || isLoading}>
               Analyze
             </Button>
           </HStack>
@@ -188,17 +224,18 @@ const Index = () => {
             .map((result, index) => (
               <Box key={index} borderWidth="0.5px" borderRadius="lg" p={4}>
                 <Stat>
-                  <StatLabel fontSize="1em" marginBottom="0.2em">{result.headline}</StatLabel >
-                  <StatHelpText>
+                  <StatLabel fontSize="1.2em" marginBottom="0.2em">{result.headline}</StatLabel >
+                  <StatLabel fontSize="1em" fontWeight="0.1em" marginBottom="0.5em">{result.text}</StatLabel >
+                  <StatHelpText >
                     <HStack>
                       {
-                        result.sentiment !== "neutral" ? (
-                          <StatArrow type={result.sentiment === 'positive' ? 'increase' : 'decrease'} />
+                        result.sentiment !== "Neutral" ? (
+                          <StatArrow type={result.sentiment === 'Positive' ? 'increase' : 'decrease'} />
                         ) :
                           <Icon as={FaCircle} color="#BFB5B5" marginRight="0.4em" />
                       }
                       <Box>
-                        {result.sentiment === 'positive' ? 'Positive' : result.sentiment === 'negative' ? 'Negative' : 'Neutral'} in sentiment
+                        {result.sentiment === 'Positive' ? 'Positive' : result.sentiment === 'Negative' ? 'Negative' : 'Neutral'} in sentiment
                       </Box>
                       <Box ml="4">
                         {result.posted.toLocaleDateString()}
@@ -206,7 +243,16 @@ const Index = () => {
                     </HStack>
                   </StatHelpText>
                 </Stat>
+                <Flex justifyContent="flex-end">
+                  <a href={result.href} target="_blank" rel="noopener noreferrer">
+                    <Button rightIcon={<FaArrowRight />}>
+                      Read
+                    </Button>
+                  </a>
+
+                </Flex>
               </Box>
+
             ))}
         </Grid>
       </VStack>
