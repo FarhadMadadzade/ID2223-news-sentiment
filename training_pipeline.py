@@ -10,6 +10,7 @@ import torch
 import hopsworks
 import numpy as np
 import evaluate
+import pandas as pd
 
 
 def get_decoding(dataset, embedding_object):
@@ -34,10 +35,11 @@ def tokenize_function(examples, bert_tokenizer):
 
 
 def get_compute_metrics(metric):
-    return def compute_metrics(eval_pred): 
+    def compute_metrics(eval_pred): 
         logits, labels = eval_pred
         predictions = np.argmax(logits, axis=-1)
         return metric.compute(predictions=predictions, references=labels)
+    return compute_metrics
 
 
 def train():
@@ -63,30 +65,69 @@ def train():
     datasets = DatasetDict({"train": train_dataset, "test": test_dataset})
     tokenized_datasets = datasets.map(tokenize_function, batched=True)
 
-    model = AutoModelForSequenceClassification.from_pretrained(
-        "bert-base-cased", num_labels=5
-    )
+    id2label = {0: "Negative", 1: "Positive", 2: "Neutral"}
+    label2id = {val: key for key, val in id2label.items()}
+
+    def model_init():
+        return AutoModelForSequenceClassification.from_pretrained('bert-base-cased', return_dict=True, num_labels=3,
+                                                             id2label=id2label, label2id=label2id)
 
     metric = evaluate.load("accuracy")
     compute_metrics = get_compute_metrics(metric)
     
     training_args = TrainingArguments(
-        output_dir="test_trainer", evaluation_strategy="epoch"
-    )  # TODO add more args based on best hyperparameters, also upload to huggingface
+        output_dir="bert_sentiment_trainer", 
+        evaluation_strategy="steps",
+        num_train_epochs=8,
+        save_total_limit=3,
+        seed=42,
+        lr_scheduler_type='constant_with_warmup',
+        warmup_steps=50,
+        max_steps=3000,
+        save_strategy="steps",
+        save_steps=250,
+        fp16=False,
+        eval_steps=250,
+        logging_steps=25,
+        report_to=["tensorboard"],
+        load_best_model_at_end=True,
+        metric_for_best_model="accuracy",
+        greater_is_better=True,
+    ) 
 
     tokenized_train_dataset = tokenized_datasets["train"].shuffle(seed=55)
     tokenized_test_dataset = tokenized_datasets["test"].shuffle(seed=55)
     
     trainer = Trainer(
-        model=model,
         args=training_args,
         train_dataset=tokenized_train_dataset,
         eval_dataset=tokenized_test_dataset,
         compute_metrics=compute_metrics,
+        model_init=model_init,
+        tokenizer=embedding_tokenizer,
     )
 
     trainer.train()
 
+    import json
+    from transformers import pipeline
+
+    pipe = pipeline("text-classification", model="Artanis1551/bert_sentiment_trainer")
+    results = pipe(list(testing_data["text"]))
+
+    json_dict = json.loads(str(results).replace('\'', '\"'))
+    predictions = pd.DataFrame.from_dict(json_dict)
+
+    predicted_labels = [pipe.model.config.label2id[x] for x in predictions['label']] 
+
+    old_accuracy = metric.compute(predictions=predicted_labels, references=test_dataset['label'])
+    print("old model metric = " + str(old_accuracy))
+
+    new_accuracy = trainer.predict(tokenized_test_dataset).metrics["test_accuracy"]
+    print("new model metric = " + str(new_accuracy))
+
+    if new_accuracy > old_accuracy:
+        trainer.push_to_hub()
 
 if __name__ == "__main__":
     train()
