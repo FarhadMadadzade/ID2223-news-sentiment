@@ -172,7 +172,7 @@ const Index = () => {
     <Box p={5}>
       <VStack spacing={4} align="stretch">
         <Heading as="h1">Sentiment Analysis Dashboard</Heading>
-        <Heading as="h3">This algorithm scrapes Yahoo news finance based on your search query. Enter a company name and press the <b>Analyze</b> button. Keep in mind that scraping can take a couple of minutes!</Heading>
+        <Heading as='h4' size='md'>This algorithm scrapes Yahoo news finance based on your search query. Enter a company name and press the <b>Analyze</b> button. Keep in mind that scraping can take a couple of minutes!</Heading>
         <FormControl id="searchKey">
           <FormLabel>Search Key</FormLabel>
           <HStack>
