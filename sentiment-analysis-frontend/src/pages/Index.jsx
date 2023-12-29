@@ -100,10 +100,10 @@ const Index = () => {
       });
 
       if (!response.ok) {
-        if (response.estimated_time) {
+        if (response.status === 503) {
           toast({
             title: "Model is loading.",
-            description: `The model is currently loading. Please try again in ${response.estimated_time} seconds.`,
+            description: `The model is currently loading. Please try again in 20 seconds.`,
             status: "info",
             duration: 5000,
             isClosable: true,
