@@ -10,7 +10,6 @@ import {
   HStack,
   Stat,
   StatLabel,
-  StatNumber,
   StatHelpText,
   StatArrow,
   useToast,
@@ -20,9 +19,20 @@ import {
 } from "@chakra-ui/react";
 import { FaSearch, FaCircle } from "react-icons/fa";
 import SentimentPieChart from "../components/PieChartSentiments";
-import credentials from "../../credentials.json";
+import { pipeline } from '@xenova/transformers';
 
+class SentimentPipeline {
+  static task = 'text-classification';
+  static model = 'Xenova/distilroberta-finetuned-financial-news-sentiment-analysis';
+  static instance = null;
 
+  static async getInstance() {
+    if (this.instance === null) {
+      this.instance = pipeline(this.task, this.model);
+    }
+    return this.instance;
+  }
+}
 const Index = () => {
   const [searchKey, setSearchKey] = useState("");
   const [articleResults, setArticleResults] = useState([]);
@@ -66,18 +76,19 @@ const Index = () => {
     setSearchKey(event.target.value);
   };
 
-  const baseUrl = "http://news-sentiment-api-apim.azure-api.net"
-
+  const baseUrl = "https://speech-recognition-386209.ew.r.appspot.com"
   const analyzeSentiment = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${baseUrl}/analyze-sentiment`, {
-        method: "POST",
+      const response = await fetch(`${baseUrl}/analyze-sentiment?${new URLSearchParams({
+        searchKey: searchKey
+      })}`, {
+        method: "GET",
+        mode: "cors",
         headers: {
           "Content-Type": "application/json",
-          "Ocp-Apim-Subscription-Key": credentials["api-key"]
+          "Access-Control-Allow-Origin": "*"
         },
-        body: JSON.stringify({ searchKey }),
       });
 
       if (!response.ok) {
@@ -86,8 +97,11 @@ const Index = () => {
 
       let responseJson = await response.json();
 
-      responseJson.result.forEach((result) => {
-        result.posted = new Date(result.posted);
+      let sentimentPipe = await SentimentPipeline.getInstance()
+      responseJson.result.forEach(async (headline) => {
+        let sentiment = await sentimentPipe(headline.text)
+        headline.sentiment = sentiment[0].label
+        headline.posted = new Date(headline.posted);
       })
 
       setArticleResults(responseJson.result);
@@ -118,6 +132,8 @@ const Index = () => {
       sentimentSumByDate();
     }
   }, [articleResults])
+
+
 
   return (
     <Box p={5}>
