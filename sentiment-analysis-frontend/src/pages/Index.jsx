@@ -191,7 +191,7 @@ const Index = () => {
         {sentimentSumResults && sentimentSumResults.length > 0 && (
           <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={4}>
             <Heading as="h3" size="md" mb={4}>
-              Sentiment Summary Over Time
+              Sentiment Summary of Found Articles
             </Heading>
             <HStack width="full">
               <VStack>
