@@ -19,20 +19,7 @@ import {
 } from "@chakra-ui/react";
 import { FaSearch, FaCircle } from "react-icons/fa";
 import SentimentPieChart from "../components/PieChartSentiments";
-import { pipeline } from '@xenova/transformers';
 
-class SentimentPipeline {
-  static task = 'text-classification';
-  static model = 'Xenova/distilroberta-finetuned-financial-news-sentiment-analysis';
-  static instance = null;
-
-  static async getInstance() {
-    if (this.instance === null) {
-      this.instance = pipeline(this.task, this.model);
-    }
-    return this.instance;
-  }
-}
 const Index = () => {
   const [searchKey, setSearchKey] = useState("");
   const [articleResults, setArticleResults] = useState([]);
@@ -87,7 +74,6 @@ const Index = () => {
         mode: "cors",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*"
         },
       });
 
@@ -96,11 +82,7 @@ const Index = () => {
       }
 
       let responseJson = await response.json();
-
-      let sentimentPipe = await SentimentPipeline.getInstance()
       responseJson.result.forEach(async (headline) => {
-        let sentiment = await sentimentPipe(headline.text)
-        headline.sentiment = sentiment[0].label
         headline.posted = new Date(headline.posted);
       })
 
@@ -116,6 +98,7 @@ const Index = () => {
         isClosable: true,
       });
     } catch (error) {
+      console.log(error)
       toast({
         title: "Analysis failed.",
         description: `There was a problem with sentiment analysis: ${error.message}`,
