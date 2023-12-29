@@ -95,7 +95,7 @@ const Index = () => {
         description: "Sentiment analysis has been successfully completed.",
         status: "success",
         duration: 5000,
-        isClosable: true,
+        isClosable: true, q
       });
     } catch (error) {
       console.log(error)
