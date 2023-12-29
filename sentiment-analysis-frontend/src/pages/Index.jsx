@@ -19,6 +19,7 @@ import {
 } from "@chakra-ui/react";
 import { FaSearch, FaCircle, FaArrowRight } from "react-icons/fa";
 import SentimentPieChart from "../components/PieChartSentiments";
+import credentials from "../../credentials.json";
 
 const Index = () => {
   const [searchKey, setSearchKey] = useState("");
@@ -68,7 +69,7 @@ const Index = () => {
     const response = await fetch(
       "https://api-inference.huggingface.co/models/Artanis1551/bert_sentiment_trainer",
       {
-        headers: { Authorization: "Bearer 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" },
+        headers: { Authorization: `Bearer ${credentials.huggingface}` },
         method: "POST",
         body: JSON.stringify(data),
       }
