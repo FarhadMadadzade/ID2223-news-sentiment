@@ -15,11 +15,21 @@ import {
   StatArrow,
   useToast,
   Icon,
-  Grid
+  Grid,
+  Tooltip,
+  Tag,
 } from "@chakra-ui/react";
 import { FaSearch, FaCircle, FaArrowRight } from "react-icons/fa";
 import SentimentPieChart from "../components/PieChartSentiments";
 import credentials from "../../credentials.json";
+
+const CustomCard = React.forwardRef(({ children, ...rest }, ref) => (
+  <Box p='1'>
+    <Tag ref={ref} {...rest}>
+      {children}
+    </Tag>
+  </Box>
+))
 
 const Index = () => {
   const [searchKey, setSearchKey] = useState("");
@@ -65,18 +75,35 @@ const Index = () => {
   };
 
   const fetchSentiments = async (data) => {
+    try {
+      const response = await fetch(
+        "https://api-inference.huggingface.co/models/Artanis1551/bert_sentiment_trainer",
+        {
+          headers: { Authorization: `Bearer ${credentials.huggingface}` },
+          method: "POST",
+          body: JSON.stringify(data),
+        }
+      );
 
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/Artanis1551/bert_sentiment_trainer",
-      {
-        headers: { Authorization: `Bearer ${credentials.huggingface}` },
-        method: "POST",
-        body: JSON.stringify(data),
+      const result = await response.json();
+
+      if (!response.estimated_time) {
+        return result
       }
-    );
+      else {
+        throw new Error(`The model is currently loading. Please try again in ${response.estimated_time} seconds.`)
+      }
 
-    const result = await response.json();
-    return result
+    }
+    catch (error) {
+      toast({
+        title: "Analysis failed.",
+        description: `There was a problem with sentiment analysis: ${error.message}`,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   }
 
   function getLabelOfMaxScore(jsonList) {
@@ -100,17 +127,7 @@ const Index = () => {
       });
 
       if (!response.ok) {
-        if (response.status === 503) {
-          toast({
-            title: "Model is loading.",
-            description: `The model is currently loading. Please try again in 20 seconds.`,
-            status: "info",
-            duration: 5000,
-            isClosable: true,
-          });
-        } else {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       let responseJson = await response.json();
@@ -135,8 +152,6 @@ const Index = () => {
         isClosable: true,
       });
     } catch (error) {
-
-
       toast({
         title: "Analysis failed.",
         description: `There was a problem with sentiment analysis: ${error.message}`,
@@ -191,8 +206,14 @@ const Index = () => {
         {sentimentSumResults && sentimentSumResults.length > 0 && (
           <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={4}>
             <Heading as="h3" size="md" mb={4}>
-              Sentiment Summary of Found Articles
+              Sentiment Score Summary of Found Articles
             </Heading>
+            <Tooltip label='Info'>
+              <Box p={2}>
+                <CustomCard>Here we sum the sentiment scores. A positive score is counted as +1, a negative as -1, and a neutral as 0</CustomCard>
+              </Box>
+            </Tooltip>
+
             <HStack width="full">
               <VStack>
                 {sentimentSumResults.map(({ date, sentimentSum }, index) => (
