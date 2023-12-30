@@ -76,23 +76,21 @@ const Index = () => {
 
   const fetchSentiments = async (data) => {
     try {
+      let body = {
+        inputs: data,
+        wait_for_model: true
+      }
       const response = await fetch(
         "https://api-inference.huggingface.co/models/Artanis1551/bert_sentiment_trainer",
         {
           headers: { Authorization: `Bearer ${credentials.huggingface}` },
           method: "POST",
-          body: JSON.stringify(data),
+          body: JSON.stringify(body),
         }
       );
 
       const result = await response.json();
-
-      if (!response.estimated_time) {
-        return result
-      }
-      else {
-        throw new Error(`The model is currently loading. Please try again in ${response.estimated_time} seconds.`)
-      }
+      return result;
     }
     catch (error) {
       toast({
