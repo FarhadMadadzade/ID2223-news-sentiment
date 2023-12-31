@@ -81,6 +81,9 @@ const Index = () => {
   };
 
   const handleMaxNumArticleChange = (val) => {
+    if (val > 100) {
+      val = 100;
+    }
     setMaxArticlesPerSearch(Number(val));
   }
 
