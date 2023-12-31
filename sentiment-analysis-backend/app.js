@@ -20,13 +20,12 @@ app.use(function (req, res, next) {
 
 
 app.get("/analyze-sentiment", async (req, res) => {
-    const { searchKey } = req.query;
+    const { searchKey, maxArticlesPerSearch } = req.query;
     if (!searchKey) {
         return res.status(400).json({ error: "Search key is required" });
     }
-
     try {
-        const headlines = await getNewsHeadlines(searchKey);
+        const headlines = await getNewsHeadlines(searchKey, maxArticlesPerSearch);
         return res.status(200).json({ result: headlines });
     }
     catch (error) {

@@ -10,7 +10,14 @@ const parseTime = (posted) => {
         date.setHours(date.getHours() - parseInt(value));
     } else if (unit.includes("day")) {
         date.setDate(date.getDate() - parseInt(value));
-    } else {
+    } else if (unit.includes("week")) {
+        date.setDate(date.getDate() - 7 * parseInt(value));
+    } else if (unit.includes("month")) {
+        date.setMonth(date.getMonth() - parseInt(value));
+    } else if (unit.includes("year")) {
+        date.setFullYear(date.getFullYear() - parseInt(value));
+    }
+    else {
         return null;
     }
     return date;
@@ -37,7 +44,10 @@ const getArticle = ($, card, fromDate) => {
 };
 
 
-export async function getNewsHeadlines(search, maxArticlesPerSearch = 50) {
+export async function getNewsHeadlines(search, maxArticlesPerSearch) {
+    if (!maxArticlesPerSearch) {
+        maxArticlesPerSearch = 50;
+    }
     const fromDate = new Date();
     fromDate.setDate(fromDate.getDate() - 7);
 
@@ -50,6 +60,8 @@ export async function getNewsHeadlines(search, maxArticlesPerSearch = 50) {
     };
 
     console.info(`Collecting articles for ${search}`);
+    search = search.replace(" ", "+");
+
     let url = `https://news.search.yahoo.com/search?p=${search}`;
     let articles = [];
     let uniqueArticles = new Set();
