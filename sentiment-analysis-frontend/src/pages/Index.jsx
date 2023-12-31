@@ -75,40 +75,28 @@ const Index = () => {
   };
 
   const fetchSentiments = async (data) => {
-    try {
-      let body = {
-        "inputs": data,
-        "wait_for_model": true
-      }
-      const response = await fetch(
-        "https://api-inference.huggingface.co/models/Artanis1551/bert_sentiment_trainer",
-        {
-          headers: { Authorization: `Bearer ${credentials.huggingface}` },
-          method: "POST",
-          body: JSON.stringify(body),
-        }
-      );
-
-      if (response.status === 503) {
-        throw new Error(`The model is currently loading. Please try again in ${result.estimated_time || 20} seconds.`)
-      }
-      else if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      else if (response.status === 200) {
-        const result = await response.json();
-        return result
-
-      }
+    let body = {
+      "inputs": data,
+      "wait_for_model": true
     }
-    catch (error) {
-      toast({
-        title: "Model inference failed",
-        description: `There was a problem with the model: ${error.message}`,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/Artanis1551/bert_sentiment_trainer",
+      {
+        headers: { Authorization: `Bearer ${credentials.huggingface}` },
+        method: "POST",
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (response.status === 503) {
+      throw new Error(`The model is currently loading. Please try again in ${result.estimated_time || 20} seconds.`)
+    }
+    else if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    else if (response.status === 200) {
+      const result = await response.json();
+      return result
     }
   }
 
