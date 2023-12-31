@@ -103,8 +103,8 @@ const Index = () => {
     }
     catch (error) {
       toast({
-        title: "Analysis failed.",
-        description: `There was a problem with sentiment analysis: ${error.message}`,
+        title: "Model inference failed",
+        description: `There was a problem with the model: ${error.message}`,
         status: "error",
         duration: 5000,
         isClosable: true,
