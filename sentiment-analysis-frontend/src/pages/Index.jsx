@@ -89,16 +89,16 @@ const Index = () => {
         }
       );
 
-      if (!response.ok) {
+      if (response.status === 503) {
+        throw new Error(`The model is currently loading. Please try again in ${result.estimated_time || 20} seconds.`)
+      }
+      else if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const result = await response.json();
-
-      if (response.status === 200) {
+      else if (response.status === 200) {
+        const result = await response.json();
         return result
-      }
-      else if (response.status === 503) {
-        throw new Error(`The model is currently loading. Please try again in ${result.estimated_time || 20} seconds.`)
+
       }
     }
     catch (error) {
