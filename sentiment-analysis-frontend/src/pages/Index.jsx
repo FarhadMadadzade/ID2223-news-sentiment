@@ -234,14 +234,16 @@ const Index = () => {
         {
           sentimentSumResults && sentimentSumResults.length > 0 && (
             <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={4}>
-              <Heading as="h3" size="md" mb={4}>
-                Sentiment Score Summary of Found Articles
-              </Heading>
-              <Tooltip label='Here we sum the sentiment scores. A positive score is counted as +1, a negative as -1, and a neutral as 0'>
-                <Box p={2}>
-                  <CustomCard>Info</CustomCard>
-                </Box>
-              </Tooltip>
+              <HStack spacing={5}>
+                <Heading as="h3" size="md" mb={4}>
+                  Sentiment Score Summary of Found Articles
+                </Heading>
+                <Tooltip label='Here we sum the sentiment scores. A positive score is counted as +1, a negative as -1, and a neutral as 0'>
+                  <Box width="10%" p={2}>
+                    <CustomCard>Info</CustomCard>
+                  </Box>
+                </Tooltip>
+              </HStack>
 
               <HStack width="full">
                 <VStack>
