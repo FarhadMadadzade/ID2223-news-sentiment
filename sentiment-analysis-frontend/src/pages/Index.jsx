@@ -76,8 +76,10 @@ const Index = () => {
 
   const fetchSentiments = async (data) => {
     let body = {
-      "inputs": data,
-      "wait_for_model": true
+      inputs: data,
+      options: {
+        wait_for_model: true
+      }
     }
     const response = await fetch(
       "https://api-inference.huggingface.co/models/Artanis1551/bert_sentiment_trainer",
