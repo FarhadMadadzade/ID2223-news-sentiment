@@ -60,14 +60,14 @@ const SentimentPieChart = ({ data }) => {
             missingSentiments.forEach((item) => sentimentsCounts[item] = 0);
         }
 
-        const percentages = Object.keys(sentimentsCounts).reduce((acc, item) => {
-            acc[item] = Math.round((sentimentsCounts[item] / data.length * 100) * 10) / 10
-            return acc;
-        }, {});
+        const percentages = [
+            Math.round((sentimentsCounts['Positive'] / data.length * 100) * 10) / 10,
+            Math.round((sentimentsCounts['Negative'] / data.length * 100) * 10) / 10,
+            Math.round((sentimentsCounts['Neutral'] / data.length * 100) * 10) / 10
+        ]
 
         setPercentagesArray(Object.keys(percentages).map((key) => percentages[key]))
     }, [data])
-
 
     return (
         <Box>

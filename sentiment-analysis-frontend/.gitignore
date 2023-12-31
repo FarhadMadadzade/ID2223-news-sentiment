@@ -3,4 +3,6 @@ node_modules
 .env.local
 .DS_Store
 credentials.json
+config.js
+.firebase
 ```
