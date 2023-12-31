@@ -197,7 +197,7 @@ const Index = () => {
               <FormLabel>Enter a maximum number of articles to analyze</FormLabel>
               <VStack mb={3} width="30%">
                 <NumberInput value={maxArticlesPerSearch} step={5} min={0} max={100} onChange={handleMaxNumArticleChange} width="100%">
-                  <NumberInputField placeholder="Defaults to 50" />
+                  <NumberInputField placeholder="Defaults to 50" title="Maximum input is 100" />
                   <NumberInputStepper>
                     <NumberIncrementStepper />
                     <NumberDecrementStepper />
