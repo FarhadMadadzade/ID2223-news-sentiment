@@ -24,8 +24,9 @@ app.get("/analyze-sentiment", async (req, res) => {
     if (!searchKey) {
         return res.status(400).json({ error: "Search key is required" });
     }
+    let maxArticles = maxArticlesPerSearch === "undefined" ? 50 : Number(maxArticlesPerSearch)
     try {
-        const headlines = await getNewsHeadlines(searchKey, maxArticlesPerSearch);
+        const headlines = await getNewsHeadlines(searchKey, maxArticles);
         return res.status(200).json({ result: headlines });
     }
     catch (error) {

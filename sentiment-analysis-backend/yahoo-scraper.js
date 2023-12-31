@@ -45,9 +45,6 @@ const getArticle = ($, card, fromDate) => {
 
 
 export async function getNewsHeadlines(search, maxArticlesPerSearch) {
-    if (!maxArticlesPerSearch) {
-        maxArticlesPerSearch = 50;
-    }
     const fromDate = new Date();
     fromDate.setDate(fromDate.getDate() - 7);
 
