@@ -18,6 +18,11 @@ import {
   Grid,
   Tooltip,
   Tag,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
 } from "@chakra-ui/react";
 import { FaSearch, FaCircle, FaArrowRight } from "react-icons/fa";
 import SentimentPieChart from "../components/PieChartSentiments";
@@ -36,6 +41,7 @@ const Index = () => {
   const [articleResults, setArticleResults] = useState([]);
   const [sentimentSumResults, setSentimentSumResults] = useState([]);
   const [todaysArticles, setTodaysArticles] = useState([]);
+  const [maxArticlesPerSearch, setMaxArticlesPerSearch] = useState(undefined);
 
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
@@ -74,7 +80,14 @@ const Index = () => {
     setSearchKey(event.target.value);
   };
 
+  const handleMaxNumArticleChange = (val) => {
+    setMaxArticlesPerSearch(Number(val));
+  }
+
   const fetchSentiments = async (data) => {
+    if (data.length === 0) {
+      throw new Error("No data was found for the past week")
+    }
     let body = {
       inputs: data,
       options: {
@@ -113,7 +126,8 @@ const Index = () => {
       const baseUrl = "https://speech-recognition-386209.ew.r.appspot.com"
 
       const response = await fetch(`${baseUrl}/analyze-sentiment?${new URLSearchParams({
-        searchKey: searchKey
+        searchKey: searchKey,
+        maxArticlesPerSearch: maxArticlesPerSearch
       })}`, {
         method: "GET",
         mode: "cors",
@@ -171,69 +185,87 @@ const Index = () => {
         <Heading as="h1">Sentiment Analysis Dashboard</Heading>
         <Heading as='h4' size='md'>This algorithm scrapes Yahoo news finance based on your search query. Enter a company name and press the <b>Analyze</b> button. Keep in mind that scraping can take a couple of minutes!</Heading>
         <FormControl id="searchKey">
-          <FormLabel>Search Key</FormLabel>
           <HStack>
-            <Input type="text" placeholder="Enter a search key e.g. TSLA" value={searchKey} onChange={handleSearchKeyChange} />
-            <Button isLoading={isLoading} leftIcon={<FaSearch />} colorScheme="teal" onClick={analyzeSentiment} isDisabled={!searchKey || isLoading}>
-              Analyze
-            </Button>
+            <VStack width="100%">
+              <FormLabel>Search Key</FormLabel>
+              <VStack mb={3} width="30%">
+                <Input type="text" placeholder="Enter a search key e.g. TSLA" value={searchKey} onChange={handleSearchKeyChange} />
+              </VStack>
+              <FormLabel>Enter a maximum number of articles to analyze</FormLabel>
+              <VStack mb={3} width="30%">
+                <NumberInput value={maxArticlesPerSearch} step={5} min={0} max={100} onChange={handleMaxNumArticleChange} width="100%">
+                  <NumberInputField placeholder="Defaults to 50" />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+                <Button isLoading={isLoading} leftIcon={<FaSearch />} colorScheme="teal" onClick={analyzeSentiment} isDisabled={!searchKey || isLoading} >
+                  Analyze
+                </Button>
+              </VStack>
+            </VStack>
           </HStack>
         </FormControl>
 
         {/* Add a pie chart representation */}
-        {todaysArticles && articleResults.length > 0 && (
-          <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={4}>
-            <Heading as="h3" size="md" mb={4} textAlign="center">
-              Today's Sentiment Breakdown (%)
-            </Heading>
-            {
-              todaysArticles.length > 0 ? (
-                <SentimentPieChart data={todaysArticles} />
-              ) :
-                <Box textAlign="center">
-                  No articles found for today
-                </Box>
-            }
-          </Box>
-        )}
+        {
+          todaysArticles && articleResults.length > 0 && (
+            <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={4}>
+              <Heading as="h3" size="md" mb={4} textAlign="center">
+                Today's Sentiment Breakdown (%)
+              </Heading>
+              {
+                todaysArticles.length > 0 ? (
+                  <SentimentPieChart data={todaysArticles} />
+                ) :
+                  <Box textAlign="center">
+                    No articles found for today
+                  </Box>
+              }
+            </Box>
+          )
+        }
 
         {/* Add a summarized bar chart representation */}
-        {sentimentSumResults && sentimentSumResults.length > 0 && (
-          <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={4}>
-            <Heading as="h3" size="md" mb={4}>
-              Sentiment Score Summary of Found Articles
-            </Heading>
-            <Tooltip label='Here we sum the sentiment scores. A positive score is counted as +1, a negative as -1, and a neutral as 0'>
-              <Box p={2}>
-                <CustomCard>Info</CustomCard>
-              </Box>
-            </Tooltip>
+        {
+          sentimentSumResults && sentimentSumResults.length > 0 && (
+            <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={4}>
+              <Heading as="h3" size="md" mb={4}>
+                Sentiment Score Summary of Found Articles
+              </Heading>
+              <Tooltip label='Here we sum the sentiment scores. A positive score is counted as +1, a negative as -1, and a neutral as 0'>
+                <Box p={2}>
+                  <CustomCard>Info</CustomCard>
+                </Box>
+              </Tooltip>
 
-            <HStack width="full">
-              <VStack>
-                {sentimentSumResults.map(({ date, sentimentSum }, index) => (
-                  <Box key={index} width="100%" textAlign="center">
-                    {date.toLocaleDateString()}
-                  </Box>
-                ))}
-              </VStack>
-              <VStack width="100%" alignItems="flex-start">
-                {sentimentSumResults.map(({ date, sentimentSum }, index) => (
-                  <HStack key={index} direction="row" width="100%">
-                    <Box height="1.5em" width={`${Math.abs(sentimentSum) * 5}%`} bg={
-                      sentimentSum > 0 ? 'green.300'
-                        : sentimentSum < 0 ? 'red.300'
-                          : 'gray.300'
-                    } />
-                    <Box textAlign="center">
-                      {sentimentSum}
+              <HStack width="full">
+                <VStack>
+                  {sentimentSumResults.map(({ date, sentimentSum }, index) => (
+                    <Box key={index} width="100%" textAlign="center">
+                      {date.toLocaleDateString()}
                     </Box>
-                  </HStack>
-                ))}
-              </VStack>
-            </HStack>
-          </Box>
-        )}
+                  ))}
+                </VStack>
+                <VStack width="100%" alignItems="flex-start">
+                  {sentimentSumResults.map(({ date, sentimentSum }, index) => (
+                    <HStack key={index} direction="row" width="100%">
+                      <Box height="1.5em" width={`${Math.abs(sentimentSum) * 5}%`} bg={
+                        sentimentSum > 0 ? 'green.300'
+                          : sentimentSum < 0 ? 'red.300'
+                            : 'gray.300'
+                      } />
+                      <Box textAlign="center">
+                        {sentimentSum}
+                      </Box>
+                    </HStack>
+                  ))}
+                </VStack>
+              </HStack>
+            </Box>
+          )
+        }
 
         <Grid templateColumns={{ base: "repeat(1, 1fr)", md: "repeat(2, 1fr)" }} gap={6}>
           {articleResults && articleResults
@@ -272,8 +304,8 @@ const Index = () => {
 
             ))}
         </Grid>
-      </VStack>
-    </Box>
+      </VStack >
+    </Box >
   );
 };
 
