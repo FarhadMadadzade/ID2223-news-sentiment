@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { JSDOM } from "jsdom";
+import cheerio from 'cheerio';
 
 const parseTime = (posted) => {
     const [value, unit] = posted.split(" ");
@@ -17,12 +17,11 @@ const parseTime = (posted) => {
 };
 
 
-const getArticle = (card, fromDate) => {
-    const headline = card.querySelector("h4.s-title")?.textContent;
-    const posted = card.querySelector("span.s-time")?.textContent.replace("·", "").trim();
-    const text = card.querySelector("p.s-desc")?.textContent.trim();
-    const aElement = card.querySelector("a.thmb");
-    const href = aElement !== null ? aElement.href : "";
+const getArticle = ($, card, fromDate) => {
+    const headline = $(card).find("h4.s-title").text();
+    const posted = $(card).find("span.s-time").text().replace("·", "").trim();
+    const text = $(card).find("p.s-desc").text().trim();
+    const href = $(card).find("a.thmb").attr('href');
 
     const postedDate = parseTime(posted);
     if (postedDate < fromDate) {
@@ -59,29 +58,29 @@ export async function getNewsHeadlines(search, maxArticlesPerSearch = 50) {
     while (true) {
         const response = await fetch(url, { headers });
         const text = await response.text();
-        const dom = new JSDOM(text);
-        const cards = dom.window.document.querySelectorAll("div.NewsArticle");
+        const $ = cheerio.load(text);
+        const cards = $("div.NewsArticle");
 
-        for (let card of cards) {
-            const article = getArticle(card, fromDate);
+        for (let i = 0; i < cards.length; i++) {
+            const card = cards[i];
+            const article = getArticle($, card, fromDate);
             if (article) {
-                const articleSet = [article.headline, article.posted]
+                const articleSet = `${article.headline}${article.posted}`;
                 if (!uniqueArticles.has(articleSet) && counter < maxArticlesPerSearch) {
-                    uniqueArticles.add(article.href);
+                    uniqueArticles.add(articleSet);
                     articles.push(article);
                     counter++;
                 }
             }
         }
 
-        try {
-            url = dom.window.document.querySelector("a.next").href;
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-        } catch (error) {
+        const nextUrl = $("a.next").attr("href");
+        if (!nextUrl) {
             break;
         }
+        url = nextUrl;
+        await new Promise((resolve) => setTimeout(resolve, 1000));
     }
     console.info(`Total articles for ${search}: ${articles.length}`);
     return articles;
 }
-
