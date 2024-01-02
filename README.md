@@ -4,11 +4,9 @@ Project for ID2223
 
 # Model description:
 
-# Files and pipelines:
+# Project files and folders:
 
-## feature-pipeline.py
-## feature-pipeline.ipynb
-## preprocessing-pipeline.ipynb
-## training-pipeline.py
-
-# User Interface:
+## sentiment-analysis-backend
+## sentiment-analysis-frontend
+## deploy_weekly_training.sh
+## feature_pipeline
