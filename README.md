@@ -1,7 +1,7 @@
 # ID2223-news-sentiment
 Project for ID2223
 
-# Data description:
+# Base dataset description:
 https://huggingface.co/datasets/financial_phrasebank  (we used the sentences_75agree datasets, meaning that the sentences that had a 75% agreement between the annotators were used)
 https://huggingface.co/datasets/zeroshot/twitter-financial-news-sentiment
 
@@ -33,7 +33,7 @@ All the files necessary for the frontend and using the endpoint from the API as 
 This is a shell script used for running a script on modal for retraining the model weekly after new features have been collected. Using modal allows us to automate the process of triggering the training pipeline, ensuring that the model is regularly updated with fresh data.
 
 ## feature_pipeline_weekly.py
-The pipeline script that collects new features weekly by using the `yahoo_finance_news_scraper.py` module. Once the new features are collected they are split into training and test sets and uploaded to the respective training and test feature groups on Hopsworks. This ensures that the model has a steady stream of new data to learn from.
+This is the pipeline script that collects new features weekly by using the `yahoo_finance_news_scraper.py` module. The scraper collects 50 headlines from the past 7 days each of the search keys `AAPL`, `AMZN`, `GOOGL`, `MSFT`, `TSLA`. We then get their sentiment using the model [distilRoberta-financial-sentiment](https://huggingface.co/mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis). In order for us to upload these feaures to Hopsworks we embedd the text for each feature using OpenAI's text embedder model [text-embedding-ada-002](https://huggingface.co/Xenova/text-embedding-ada-002). Once the new features are collected they are split into training and test sets and uploaded to the respective training and test feature groups on Hopsworks. This ensures that the model has a steady stream of new data to learn from.
 
 ## feature_pipeline.ipynb
 This is the notebook used to upload the initial features from the base dataset. The code is very similar to the weekly feature pipeline script, but does not collect features using the scraping script. It is also here that we created the train and test feature groups on Hopsworks. This pipeline was only run once to create initialize the feature groups.
