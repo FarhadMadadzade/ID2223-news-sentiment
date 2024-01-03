@@ -127,6 +127,7 @@ const Index = () => {
     setIsLoading(true);
     try {
       const baseUrl = "https://speech-recognition-386209.ew.r.appspot.com"
+      // const baseUrl = "http://localhost:3000"
 
       const response = await fetch(`${baseUrl}/analyze-sentiment?${new URLSearchParams({
         searchKey: searchKey,
