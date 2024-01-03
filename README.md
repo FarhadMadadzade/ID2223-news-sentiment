@@ -12,31 +12,70 @@ https://huggingface.co/bert-base-cased
 # Project files and folders:
 
 ## sentiment_analysis_backend
-All the files necessary for the API used by the app. This includes the javascript version of yahoo_finance_news_scraper. The backend is written using the conventions of NodeJs.
+All the files necessary for the API used by the app. This includes the javascript version of yahoo_finance_news_scraper. The backend is written using the conventions of NodeJs. This API has one endpoint that is used by the frontend to get the sentiment of a specific stock. The endpoint is called /sentiment-analysis and takes queries as input. The queries are `searchKey` and `maxArticlesPerSearch`. The `searchKey` is the search term that is used to find the headlines that are related to the stock. The `maxArticlesPerSearch` is the maximum number of headlines that are used to analyze the sentiment of the search term. The endpoint returns a json object with the following structure:
+```json
+{
+    "result": [
+        {
+            "headline": "string",
+            "posted": "Date | null",
+            "text": "string",
+            "href": "string",
+        },
+        ...
+    ]
+}
+```
 
 ## sentiment_analysis_frontend
-All the files necessary for the frontend and using the endpoint from the API as well as the inference API for the model on Huggingface. The frontend is written in React. 
+All the files necessary for the frontend and using the endpoint from the API as well as the inference API for the model on Huggingface. The frontend is written in React, a popular JavaScript library for building user interfaces. It's responsible for displaying data to users and handling user interactions.
 
 ## deploy_weekly_training.sh
-This is a shell script used for running a script on modal for retraining the model weekly after new features have been collected.
+This is a shell script used for running a script on modal for retraining the model weekly after new features have been collected. Using modal allows us to automate the process of triggering the training pipeline, ensuring that the model is regularly updated with fresh data.
 
 ## feature_pipeline_weekly.py
-The pipeline script that collects new features weekly by using the yahoo_finance_news_scraper.py module. Once the new features are collected they are split into training and test sets and uploaded to the respective training and test feature groups on Hopsworks.
+The pipeline script that collects new features weekly by using the `yahoo_finance_news_scraper.py` module. Once the new features are collected they are split into training and test sets and uploaded to the respective training and test feature groups on Hopsworks. This ensures that the model has a steady stream of new data to learn from.
 
 ## feature_pipeline.ipynb
-This is the notebook used to upload the initial features from the base dataset. The code is very similar to the weekly feature pipeline script, but does not collect features using the scraping script. It is also here that we created the train and test feature groups on Hopsworks.
+This is the notebook used to upload the initial features from the base dataset. The code is very similar to the weekly feature pipeline script, but does not collect features using the scraping script. It is also here that we created the train and test feature groups on Hopsworks. This pipeline was only run once to create initialize the feature groups.
 
 ## hyperparameter_search.ipynb
-This is a notebook we used to make a hyperparameter search to find the optimal combination of hyperparameters for when we train the model.
+This is a notebook we used to make a hyperparameter search to find the optimal combination of hyperparameters for when we train the model. The optimal hyperparameter search were found using Optuna as the background to the hyperparameter_search method of the Trainer class from Huggingface. The optimal training arguments which we also end up using are the following:
+
+```python
+training_args = TrainingArguments(
+    output_dir="bert_sentiment_trainer", 
+    evaluation_strategy="steps",
+    per_device_train_batch_size=16,
+    per_device_eval_batch_size=4,
+    num_train_epochs=8,
+    learning_rate= 2.754984679344267e-05,
+    save_total_limit=3,
+    seed=42,
+    lr_scheduler_type='constant_with_warmup',
+    warmup_steps=50,
+    max_steps=3000,
+    save_strategy="steps",
+    save_steps=250,
+    fp16=False,
+    eval_steps=250,
+    logging_steps=25,
+    report_to=["tensorboard"],
+    load_best_model_at_end=True,
+    metric_for_best_model="accuracy",
+    greater_is_better=True,
+)
+```
+
 
 ## preprocessing_pipeline.ipynb
-This notebook was used to preprocess the base data and collect them into csv files (for later use in feature_pipeline.ipynb) as well as figuring out and testing the text embedding tokenizer to see that it works as intended. 
+This notebook was used to preprocess the base data and collect them into csv files (for later use in feature_pipeline.ipynb) as well as figuring out and testing the text embedding tokenizer to see that it works as intended.
 
 ## requirements.txt
 The requirements.txt file contains the modules needed to run the python script.
 
 ## training_pipeline.py
-This script is ran when running the shell script deploy_weekly_training.sh. It collects the training and test features form Hopsworks and runs the finetuning of the bert_base_cased model from Huggingface using the optimal hyperparameters found in the previously mentioned hyperparameter python notebook.
+This script is ran when running the shell script deploy_weekly_training.sh. It collects the training and test features form Hopsworks and runs the finetuning of the bert_base_cased model from Huggingface using the optimal hyperparameters found in the previously mentioned hyperparameter python notebook. This script is the main driver of the model training process.
 
 ## training_pipeline_notebook.ipynb
 This notebook is similar to the training_pipeline.py script but is in a python notebook format. In this notebook we fine-tuned and uploaded the first version of our model to huggingface. 
