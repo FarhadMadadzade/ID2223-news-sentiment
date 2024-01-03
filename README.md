@@ -2,7 +2,7 @@
 Project for ID2223
 
 # Data description:
-https://huggingface.co/datasets/financial_phrasebank
+https://huggingface.co/datasets/financial_phrasebank  (we used the sentences_75agree datasets, meaning that the sentences that had a 75% agreement between the annotators were used)
 https://huggingface.co/datasets/zeroshot/twitter-financial-news-sentiment
 
 # Base model description:
