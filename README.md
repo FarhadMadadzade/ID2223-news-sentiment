@@ -83,7 +83,7 @@ This script is ran when running the shell script deploy_weekly_training.sh. It c
 This notebook is similar to the training_pipeline.py script but is in a python notebook format. In this notebook we fine-tuned and uploaded the first version of our model to huggingface. 
 
 ## yahoo_finance_news_scraper.py
-This module contains the functions necessary to do the scraping on yahoo news to find the headlines that are related to a specific search term. 
+This module contains the functions necessary to do the scraping on yahoo news to find the headlines that are related to a specific search term. The script ran into errors when using Python versions higher than 3.10, so we recommend to use version 3.9 or 3.8.
 
 
 # How to run the pipelines
