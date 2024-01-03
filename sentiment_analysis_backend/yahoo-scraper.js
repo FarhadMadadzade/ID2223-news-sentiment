@@ -88,7 +88,6 @@ export async function getNewsHeadlines(search, maxArticlesPerSearch) {
             break;
         }
         url = nextUrl;
-        await new Promise((resolve) => setTimeout(resolve, 1000));
     }
     console.info(`Total articles for ${search}: ${articles.length}`);
     return articles;
