@@ -1,6 +1,9 @@
 # ID2223-news-sentiment
 Project for ID2223
 
+# Project description
+This project is a sentiment analysis model for financial news headlines. The model is fine-tuned on the base data [Financial Phrasebank](https://huggingface.co/datasets/financial_phrasebank) dataset and [Zeroshot twitter](https://huggingface.co/datasets/zeroshot/twitter-financial-news-sentiment). On a weekly basis, new features are collected by scraping Yahoo news and getting the sentiment to new news articles. The base model is then fine-tuned again but with the incremented dataset and if the newly fine-tuned model performs better than the prior version, this one is deployed. The model is then used by an app that we built that allows users to search for a stock and get the sentiment of the stock based on the headlines related to the stock. These headlines are also scraped using a javascript version of the script that is used to collect new features on a daily basis. The scraping is done on our own API that we have deployed using Google Cloud. The frontend app is deployed using Firebase and can be found on [News Sentiment Analyzer](https://news-sentiment-analyzer.web.app/). 
+
 # Base dataset description:
 https://huggingface.co/datasets/financial_phrasebank  (we used the sentences_75agree datasets, meaning that the sentences that had a 75% agreement between the annotators were used)
 https://huggingface.co/datasets/zeroshot/twitter-financial-news-sentiment
@@ -74,7 +77,7 @@ This notebook was used to preprocess the base data and collect them into csv fil
 The requirements.txt file contains the modules needed to run the python script.
 
 ## training_pipeline.py
-This script is ran when running the shell script deploy_weekly_training.sh. It collects the training and test features form Hopsworks and runs the finetuning of the bert_base_cased model from Huggingface using the optimal hyperparameters found in the previously mentioned hyperparameter python notebook. This script is the main driver of the model training process.
+This script is ran when running the shell script deploy_weekly_training.sh. It collects the training and test features form Hopsworks and runs the finetuning of the bert_base_cased model from Huggingface using the optimal hyperparameters found in the previously mentioned hyperparameter python notebook. If the fine-tuned model (using the newly incremented data) performs better than the previous version the new model is uploaded to huggingface. This script is the main driver of the model training process.
 
 ## training_pipeline_notebook.ipynb
 This notebook is similar to the training_pipeline.py script but is in a python notebook format. In this notebook we fine-tuned and uploaded the first version of our model to huggingface. 
