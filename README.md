@@ -22,7 +22,6 @@ All the files necessary for the API used by the app. This includes the javascrip
             "text": "string",
             "href": "string",
         },
-        ...
     ]
 }
 ```
