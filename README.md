@@ -7,10 +7,14 @@ This project is a sentiment analysis model for financial news headlines. The mod
 # Base dataset description:
 https://huggingface.co/datasets/financial_phrasebank  (we used the sentences_75agree datasets, meaning that the sentences that had a 75% agreement between the annotators were used)
 https://huggingface.co/datasets/zeroshot/twitter-financial-news-sentiment
+Both datasets essentially include a text as well as a sentiment label (negative, neutral, positive) for the financial phrase bank and (bearish, bullish, neutral) for the Twitter financial phrase dataset (collected through the Twitter API, RIP the free API).
+The financial phrase bank dataset contains 4 subsets created based on how many people agreed with the annotation: 50%, 66%, 75%, 100%
+Preprocessing was required to adapt between the different labeling used by the datasets so they could be combined.
 
 # Base model description:
 https://huggingface.co/bert-base-cased
-
+The BERT (Bidirectional Encoder Representations from Transformers) model is a transformers model that has been pre-trained on a large dataset of English data in a self-supervised fashion. It is a base model that has been pre-trained on the raw texts only, with no humans labeling them in any way. The model is case-sensitive. The model was pre-trained with two objectives: masked language modeling (MLM) and next sentence prediction (NSP). The MLM objective involves masking 15% of the words in the input sentence and predicting the masked words. The NSP objective involves concatenating two masked sentences as inputs during pre-training and predicting if the two sentences were following each other or not. The BERT model can be fine-tuned on a downstream task such as sequence classification, token classification, or question answering. The model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially masked) to make decisions.
+This model was first introduced in this paper https://arxiv.org/pdf/1810.04805.pdf
 
 # Project files and folders:
 
