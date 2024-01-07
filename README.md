@@ -4,6 +4,7 @@ Project for ID2223
 Access to UI: https://news-sentiment-analyzer.web.app/
 
 Developers: Farhad Madadzade & Calin Petrea
+
 Group number: 19
 
 # Project description
