@@ -247,14 +247,14 @@ const Index = () => {
               </HStack>
 
               <HStack width="full">
-                <VStack>
+                <VStack width="8%">
                   {sentimentSumResults.map(({ date, sentimentSum }, index) => (
-                    <Box key={index} width="100%" textAlign="center">
+                    <Box key={index} width="100%" textAlign="left">
                       {date.toLocaleDateString()}
                     </Box>
                   ))}
                 </VStack>
-                <VStack width="100%" alignItems="flex-start">
+                <VStack width="92%" alignItems="flex-start">
                   {sentimentSumResults.map(({ date, sentimentSum }, index) => (
                     <HStack key={index} direction="row" width="100%">
                       <Box height="1.5em" width={`${Math.abs(sentimentSum) * 5}%`} bg={
