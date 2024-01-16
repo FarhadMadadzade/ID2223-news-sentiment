@@ -246,17 +246,14 @@ const Index = () => {
                 </Tooltip>
               </HStack>
 
-              <HStack width="full">
-                <VStack width="8%">
-                  {sentimentSumResults.map(({ date, sentimentSum }, index) => (
-                    <Box key={index} width="100%" textAlign="left">
+              <VStack width="full">
+                {sentimentSumResults.map(({ date, sentimentSum }, index) => (
+                  <HStack key={index} width="100%">
+
+                    <Box textAlign="left" width="5em">
                       {date.toLocaleDateString()}
                     </Box>
-                  ))}
-                </VStack>
-                <VStack width="92%" alignItems="flex-start">
-                  {sentimentSumResults.map(({ date, sentimentSum }, index) => (
-                    <HStack key={index} direction="row" width="100%">
+                    <HStack width="95%">
                       <Box height="1.5em" width={`${Math.abs(sentimentSum) * 5}%`} bg={
                         sentimentSum > 0 ? 'green.300'
                           : sentimentSum < 0 ? 'red.300'
@@ -266,9 +263,9 @@ const Index = () => {
                         {sentimentSum}
                       </Box>
                     </HStack>
-                  ))}
-                </VStack>
-              </HStack>
+                  </HStack>
+                ))}
+              </VStack>
             </Box>
           )
         }
