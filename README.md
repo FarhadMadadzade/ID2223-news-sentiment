@@ -1,7 +1,7 @@
 # ID2223-news-sentiment
 Project for ID2223
 
-Access to UI: https://news-sentiment-analyzer.web.app/
+Access to UI: https://news-sentiment-analyzer.web.app/ (currently down)
 
 Developers: Farhad Madadzade & Calin Petrea
 
